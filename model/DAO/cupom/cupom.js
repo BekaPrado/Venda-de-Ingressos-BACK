@@ -1,5 +1,5 @@
 /*******************************************************************************************
- * Objetivo: DAO para gerenciamento de cupons
+ * Objetivo: DAO para gerenciamento de cupons (sem tipo e validade)
  *******************************************************************************************/
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -8,8 +8,8 @@ const inserirCupom = async (dados) => {
   try {
     let sql = `
       INSERT INTO tbl_cupom 
-        (codigo, descricao, desconto, tipo, evento_id, valido_ate, botao_pagseguro_html)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+        (codigo, descricao, desconto, evento_id, botao_pagseguro_html)
+      VALUES (?, ?, ?, ?, ?)
     `;
 
     const result = await prisma.$executeRawUnsafe(
@@ -17,9 +17,7 @@ const inserirCupom = async (dados) => {
       dados.codigo,
       dados.descricao || '',
       parseFloat(dados.desconto),
-      dados.tipo,
       parseInt(dados.evento_id),
-      dados.valido_ate || null,
       dados.botao_pagseguro_html
     );
 
@@ -56,7 +54,7 @@ const atualizarCupom = async (id, dados) => {
   try {
     let sql = `
       UPDATE tbl_cupom 
-      SET codigo = ?, descricao = ?, desconto = ?, tipo = ?, evento_id = ?, valido_ate = ?, botao_pagseguro_html = ?
+      SET codigo = ?, descricao = ?, desconto = ?, evento_id = ?, botao_pagseguro_html = ?
       WHERE id = ?
     `;
 
@@ -65,9 +63,7 @@ const atualizarCupom = async (id, dados) => {
       dados.codigo,
       dados.descricao || '',
       parseFloat(dados.desconto),
-      dados.tipo,
       parseInt(dados.evento_id),
-      dados.valido_ate || null,
       dados.botao_pagseguro_html,
       parseInt(id)
     );
@@ -86,7 +82,6 @@ const deletarCupom = async (id) => {
     return result ? { status: true, status_code: 200 } : { status: false, status_code: 404, message: "Cupom não encontrado." };
   } catch (error) {
     if (error.code === 'P2010' && error.meta?.code === '1451') {
-      // cupom em uso
       return { status: false, status_code: 409, message: "Cupom em uso por uma empresa. Não pode ser excluído." };
     }
     console.error('Erro ao deletar cupom:', error);

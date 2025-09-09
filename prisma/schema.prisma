@@ -20,16 +20,14 @@ model tbl_categoria {
 }
 
 model tbl_cupom {
-  id                   Int             @id @default(autoincrement())
-  codigo               String          @db.VarChar(50)
-  descricao            String?         @db.VarChar(150)
-  desconto             Decimal?        @db.Decimal(10, 2)
-  tipo                 tbl_cupom_tipo? @default(percentual)
-  botao_pagseguro_html String          @db.Text
+  id                   Int           @id @default(autoincrement())
+  codigo               String        @db.VarChar(50)
+  descricao            String?       @db.VarChar(150)
+  desconto             Decimal?      @db.Decimal(10, 2)
+  botao_pagseguro_html String        @db.Text
   evento_id            Int
-  valido_ate           DateTime?       @db.Date
-  criado_em            DateTime?       @default(now()) @db.Timestamp(0)
-  tbl_evento           tbl_evento      @relation(fields: [evento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tbl_cupom_ibfk_1")
+  criado_em            DateTime?     @default(now()) @db.Timestamp(0)
+  tbl_evento           tbl_evento    @relation(fields: [evento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tbl_cupom_ibfk_1")
   tbl_empresa          tbl_empresa[]
 
   @@index([evento_id], map: "evento_id")
@@ -42,10 +40,16 @@ model tbl_empresa {
   telefone         String?            @db.VarChar(20)
   cpf              String?            @db.VarChar(14)
   cnpj             String?            @db.VarChar(18)
-  endereco         String?            @db.VarChar(255)
   evento_id        Int
   cupom_id         Int?
   criado_em        DateTime?          @default(now()) @db.Timestamp(0)
+  logradouro       String             @db.VarChar(150)
+  numero           String             @db.VarChar(10)
+  complemento      String?            @db.VarChar(100)
+  bairro           String             @db.VarChar(100)
+  cidade           String             @db.VarChar(100)
+  uf               String             @db.Char(2)
+  cep              String             @db.VarChar(9)
   tbl_evento       tbl_evento         @relation(fields: [evento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tbl_empresa_ibfk_1")
   tbl_cupom        tbl_cupom?         @relation(fields: [cupom_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tbl_empresa_ibfk_2")
   tbl_participante tbl_participante[]
@@ -75,23 +79,26 @@ model tbl_evento {
 }
 
 model tbl_participante {
-  id          Int         @id @default(autoincrement())
-  nome        String      @db.VarChar(150)
-  email       String?     @db.VarChar(150)
-  telefone    String?     @db.VarChar(20)
+  id          Int                      @id @default(autoincrement())
+  nome        String                   @db.VarChar(150)
+  email       String?                  @db.VarChar(150)
+  telefone    String?                  @db.VarChar(20)
+  empresa     String?                  @db.VarChar(150)
   empresa_id  Int
-  tbl_empresa tbl_empresa @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tbl_participante_ibfk_1")
+  genero      tbl_participante_genero? @default(Prefiro_n_o_informar)
+  tbl_empresa tbl_empresa              @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tbl_participante_ibfk_1")
 
   @@index([empresa_id], map: "empresa_id")
-}
-
-enum tbl_cupom_tipo {
-  percentual
-  valor
 }
 
 enum tbl_evento_status {
   ativo
   cancelado
   excluido
+}
+
+enum tbl_participante_genero {
+  Masculino
+  Feminino
+  Prefiro_n_o_informar @map("Prefiro não informar")
 }

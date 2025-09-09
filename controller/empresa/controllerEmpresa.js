@@ -15,9 +15,11 @@ const inserirEmpresa = async (dados, contentType) => {
             return config.ERROR_CONTENT_TYPE;
         }
 
-        if (!dados.nome_empresa || !dados.email || !dados.evento_id) {
+        if (!dados.nome_empresa || !dados.email || !dados.evento_id || 
+            !dados.logradouro || !dados.numero || !dados.bairro || !dados.cidade || !dados.uf || !dados.cep) {
             return config.ERROR_REQUIRED_FIELDS;
         }
+        
 
         const novaEmpresa = await empresaDAO.inserirEmpresa(dados);
 

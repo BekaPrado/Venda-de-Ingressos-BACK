@@ -36,6 +36,9 @@ const bodyParser = require('body-parser');
 const bodyParserJSON = bodyParser.json();
 const app = express();
 
+const ExcelJS = require('exceljs');
+
+
 app.use(cors());
 
 app.use((req, res, next) => {
@@ -111,6 +114,74 @@ app.get('/v1/100open/participante/empresa/:empresaId', cors(), async (req, res) 
     const result = await controllerParticipante.listarParticipantesPorEmpresa(req.params.empresaId);
     res.status(result.status_code).json(result);
 });
+
+// Exportar compras + participantes para Excel
+app.get('/v1/100open/exportar-compras', async (req, res) => {
+  try {
+    // Buscar todas as empresas + participantes
+    const [empresas] = await db.query(`
+      SELECT e.id, e.nome_empresa, e.email, e.telefone, e.cpf, e.cnpj,
+             ev.nome AS evento_nome
+      FROM tbl_empresa e
+      JOIN tbl_evento ev ON ev.id = e.evento_id
+      ORDER BY ev.nome, e.nome_empresa
+    `);
+
+    const [participantes] = await db.query(`
+      SELECT p.id, p.nome, p.email, p.telefone, p.genero, p.empresa_id
+      FROM tbl_participante p
+      ORDER BY p.empresa_id, p.nome
+    `);
+
+    // Criar planilha
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet('Compras');
+
+    // Cabeçalho
+    ws.addRow([
+      "Evento", "Empresa", "Email", "Telefone", "CPF", "CNPJ",
+      "Participante", "Email Participante", "Telefone Participante", "Gênero"
+    ]);
+
+    // Linhas
+    empresas.forEach(emp => {
+      const parts = participantes.filter(p => p.empresa_id === emp.id);
+      if (parts.length === 0) {
+        ws.addRow([
+          emp.evento_nome, emp.nome_empresa, emp.email, emp.telefone, emp.cpf, emp.cnpj,
+          "—", "—", "—", "—"
+        ]);
+      } else {
+        parts.forEach(p => {
+          ws.addRow([
+            emp.evento_nome, emp.nome_empresa, emp.email, emp.telefone, emp.cpf, emp.cnpj,
+            p.nome, p.email, p.telefone, p.genero
+          ]);
+        });
+      }
+    });
+
+    // Ajustar largura
+    ws.columns.forEach(col => { col.width = 20; });
+
+    // Enviar como download
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="compras.xlsx"'
+    );
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("Erro ao exportar Excel:", err);
+    res.status(500).json({ status: false, message: "Erro ao exportar Excel" });
+  }
+});
+
 
 /************************************
  *            CUPOM

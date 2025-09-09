@@ -122,11 +122,17 @@ const selectEventoById = async (id) => {
   }
 };
 
+// Alias para manter compatibilidade
+const buscarEventoPorId = async (id) => {
+  return await selectEventoById(id);
+};
+
 module.exports = {
   inserirEvento,
   updateEvento,
   cancelarEvento,
   deleteEvento,
   selectAllEventos,
-  selectEventoById
+  selectEventoById,
+  buscarEventoPorId   // <-- adiciona aqui
 };

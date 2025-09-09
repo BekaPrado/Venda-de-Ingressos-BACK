@@ -1,31 +1,47 @@
-/*******************************************************************************************
- * Objetivo: DAO para gerenciamento de participantes
- *******************************************************************************************/
+/*************************************************************************************************
+ * Objetivo: DAO de Participantes
+ * Autor: Rebeka Marcelino
+ * Data: 05/09/2025
+ * Versão: 1.1 (atualizado com campos empresa e genero)
+ *************************************************************************************************/
+
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Inserir participante
 const inserirParticipante = async (dados) => {
   try {
-    let sql = `
-      INSERT INTO tbl_participante (nome, email, telefone, empresa_id)
-      VALUES ('${dados.nome}', '${dados.email}', '${dados.telefone}', ${dados.empresa_id})
-    `;
-    return await prisma.$executeRawUnsafe(sql) ? true : false;
+    const participante = await prisma.tbl_participante.create({
+      data: {
+        nome: dados.nome,
+        email: dados.email,
+        telefone: dados.telefone,
+        empresa_id: parseInt(dados.empresa_id),
+        empresa: dados.empresa || null,
+        genero: dados.genero || "Prefiro não informar"
+      }
+    });
+    return participante;
   } catch (error) {
-    console.error('Erro ao inserir participante:', error);
+    console.error("Erro DAO inserirParticipante:", error);
     return false;
   }
 };
 
-const selectParticipantesByEmpresa = async (empresaId) => {
+// Listar participantes por empresa
+const listarParticipantesPorEmpresa = async (empresaId) => {
   try {
-    let sql = `SELECT * FROM tbl_participante WHERE empresa_id = ${empresaId}`;
-    let result = await prisma.$queryRawUnsafe(sql);
-    return result.length > 0 ? result : false;
+    return await prisma.tbl_participante.findMany({
+      where: { empresa_id: parseInt(empresaId) },
+      orderBy: { id: 'asc' }
+    });
   } catch (error) {
-    console.error('Erro ao listar participantes:', error);
-    return false;
+    console.error("Erro DAO listarParticipantesPorEmpresa:", error);
+    return []; // em vez de false
   }
 };
 
-module.exports = { inserirParticipante, selectParticipantesByEmpresa };
+module.exports = {
+  inserirParticipante,
+  listarParticipantesPorEmpresa
+};

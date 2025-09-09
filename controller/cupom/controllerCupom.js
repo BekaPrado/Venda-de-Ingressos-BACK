@@ -1,5 +1,5 @@
 /*******************************************************************************************
- * Objetivo: Controlador para gerenciamento de cupons
+ * Objetivo: Controlador para gerenciamento de cupons (sem tipo e validade)
  *******************************************************************************************/
 const DACupom = require('../../model/DAO/cupom/cupom');
 const message = require('../../modulo/config');
@@ -7,14 +7,7 @@ const message = require('../../modulo/config');
 const inserirCupom = async (dados, contentType) => {
   try {
     if (contentType.includes('application/json')) {
-      // Agora o campo botao_pagseguro_html é obrigatório
-      if (
-        !dados.codigo ||
-        !dados.desconto ||
-        !dados.tipo ||
-        !dados.evento_id ||
-        !dados.botao_pagseguro_html
-      ) {
+      if (!dados.codigo || !dados.desconto || !dados.evento_id || !dados.botao_pagseguro_html) {
         return message.ERROR_REQUIRED_FIELDS;
       }
 
@@ -54,13 +47,7 @@ const validarCupom = async (dados, contentType) => {
 const atualizarCupom = async (id, dados, contentType) => {
   try {
     if (contentType.includes('application/json')) {
-      if (
-        !dados.codigo ||
-        !dados.desconto ||
-        !dados.tipo ||
-        !dados.evento_id ||
-        !dados.botao_pagseguro_html
-      ) {
+      if (!dados.codigo || !dados.desconto || !dados.evento_id || !dados.botao_pagseguro_html) {
         return message.ERROR_REQUIRED_FIELDS;
       }
 
@@ -74,7 +61,6 @@ const atualizarCupom = async (id, dados, contentType) => {
   }
 };
 
-
 const deletarCupom = async (id) => {
   try {
     const result = await DACupom.deletarCupom(id);
@@ -84,8 +70,6 @@ const deletarCupom = async (id) => {
     return message.ERROR_INTERNAL_SERVER_CONTROLLER;
   }
 };
-
-
 
 module.exports = {
   inserirCupom,
